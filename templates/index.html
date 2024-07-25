@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Bong</title>
+    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/fonts/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/Navbar-Right-Links-Dark-icons.css' %}">
+</head>
+
+<body style="background: rgb(33,37,41);">
+    <nav class="navbar navbar-dark navbar-expand-md bg-dark py-3">
+        <div class="container"><a class="navbar-brand d-flex align-items-center" href="/" style="text-align: right;margin: 20px;"><span style="text-align: right;margin: 5px;position: relative;">Bongpilot</span></a>
+            <div class="collapse navbar-collapse" id="navcol-5">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"></li>
+                    <li class="nav-item"></li>
+                    <li class="nav-item"></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="background: #212529;">
+        <div class="row">
+            <div class="col-md-12">
+                <p style="color: rgb(255,255,255);">How may I help you?</p>
+                <input type="text" id="searchfield"/>
+                <button onclick="search()">Go</button>
+            </div>
+        </div>
+        <div class="row">
+            <p id="responsefield" style="color: rgb(255,255,255);>...</p>
+        </div>
+    </div>
+    <footer class="text-center bg-dark">
+        <div class="container text-white py-4 py-lg-5">
+            <p class="text-muted mb-0">Created with ♥ by @leost</p>
+        </div>
+    </footer>
+    <script src="{% static 'assets/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script>
+        function search() {
+            let field = document.getElementById("searchfield");
+            let term = field.value;
+            let url = '/q/' + term
+            fetch(url).then(function(response) {
+                return response.json();
+            }).then(function(data) {
+                console.log(data['answer']);
+                document.getElementById("responsefield").textContent=data['answer'];
+            }).catch(function(err) {
+                console.log('Fetch Error :-S', err);
+            });
+        }
+    </script>
+</body>
+
+</html>
