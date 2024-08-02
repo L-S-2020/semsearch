@@ -1,13 +1,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import requests
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_experimental.llms.ollama_functions import OllamaFunctions
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from scraper import scrape
 import requests
 from bs4 import BeautifulSoup
+import time
 
 def scrape(term):
     boogle = requests.get('https://boogle.boreal.express/search?q=' + term)
@@ -16,47 +15,46 @@ def scrape(term):
     results.pop(0)
     print(results)
     links = []
+    titles = []
     for link in boogl.find_all('a'):
         l = link.get('href')
         if l not in links:
             links.append(l)
-    return links[:4]
-@tool
-def search(term: str) -> str:
-    """Search for user made websites"""
-    return scrape(term)
-
-@tool
-def scrape(term: str) -> str:
-    """Scrape a url"""
-    r = requests.get(term)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    return soup.get_text()
-
-tools = [search, scrape]
-prompt = ChatPromptTemplate.from_messages(
-    [
-        (
+    links = links[:4]
+    for l in links:
+        r = requests.get(l)
+        soup = BeautifulSoup(r.content, 'html.parser')
+        titles.append(soup.title.string)
+    t = ''
+    for title in titles:
+        t += title + ' ' + links[titles.index(title)] + '\n'
+    prompt = [(
             "system",
-            "You are a helpful assistant. Make sure to use the search and scrape tool to for information."
+            "You are a helpful assistant. Search the most suited website from the search results."
         ),
-        ("placeholder", "{chat_history}"),
-        ("human", "{input}"),
-        ("placeholder", "{agent_scratchpad}"),
+        ("user", "Search results: " + t),
+        ("user", "Search term: " + term)
     ]
-)
-llm = OllamaFunctions(model="llama3")
-llm_with_tools = llm.bind_tools(tools)
-
-def ask(question):
-    print(question)
-    answer = llm_with_tools.invoke(question)
+    llm = ChatOllama(model="llama3")
+    answer = llm.invoke(question)
     return answer.content
 
-# Create your views here.
+def ask(question):
+#    print(question)
+#    answer = scrape(question)
+#    print(answer)
+    if 'ad' in question:
+        answer = 'You can check out the boreal ad service.'
+    else:
+        answer = 'Im happy to help you with searching or scraping websites. What can I do for you?'
+    time.sleep(10)
+    return answer
+
+# Create your views here
 def search(request, term):
-    #answer = ask(term)
-    answer = 'Hello'
+    print(term)
+    answer = ask(term)
+    print(answer)
     return JsonResponse({'answer': answer})
 
 def main(request):
